@@ -1,0 +1,46 @@
+{
+  "name": "@cegaana/cmailer",
+  "version": "2.0.0",
+  "description": "Command-line interface for simple-mailer — local-file and Google Workspace mail delivery.",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://cegaana.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cegaana/simple-mailer.git",
+    "directory": "cmailer"
+  },
+  "bugs": "https://github.com/cegaana/simple-mailer/issues",
+  "type": "module",
+  "bin": {
+    "cmailer": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@cegaana/simple-mailer": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "@typescript-eslint/eslint-plugin": "^8.25.0",
+    "@typescript-eslint/parser": "^8.25.0",
+    "eslint": "^9.21.0",
+    "tsx": "^4.23.13",
+    "typescript": "^5.8.2",
+    "vitest": "^5.0.0"
+  }
+}

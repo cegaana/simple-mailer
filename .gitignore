@@ -1,0 +1,15 @@
+# Root-level ignores. Each workspace package has its own .gitignore.
+node_modules/
+.DS_Store
+*.log
+/data
+/dist
+
+# Real credentials (Google Workspace OAuth2, etc.) — see .env.example.
+# .env is conventionally a symlink to .env.local; both are ignored here.
+.env
+.env.local
+!.env.example
+
+# The root package-lock.json IS tracked (single lockfile for the npm
+# workspaces in this repo) — do not add it here.

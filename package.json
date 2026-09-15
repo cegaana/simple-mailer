@@ -1,0 +1,33 @@
+{
+  "name": "simple-mailer-project",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Project root for simple-mailer. Docs and README live here; the library package lives in ./simple-mailer and the CLI (`cmailer`) lives in ./cmailer. Run the CLI from this folder.",
+  "license": "MIT",
+  "homepage": "https://cegaana.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cegaana/simple-mailer.git"
+  },
+  "bugs": "https://github.com/cegaana/simple-mailer/issues",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "workspaces": [
+    "simple-mailer",
+    "cmailer"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace simple-mailer && npm run build --workspace cmailer",
+    "typecheck": "npm run typecheck --workspace simple-mailer && npm run typecheck --workspace cmailer",
+    "lint": "npm run lint --workspace simple-mailer && npm run lint --workspace cmailer",
+    "test": "npm test --workspace simple-mailer && npm test --workspace cmailer",
+    "cmailer": "node ./cmailer/dist/cli.js"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.3": true,
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true
+  }
+}
