@@ -3,7 +3,7 @@
 [![CI](https://github.com/cegaana/simple-mailer/actions/workflows/ci.yml/badge.svg)](https://github.com/cegaana/simple-mailer/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D24.0.0-green.svg)](https://nodejs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 
 Built and maintained by [CEGAANA](https://cegaana.org) for its own event and
 alumni mailings, and open-sourced for anyone who needs the same thing.
@@ -123,7 +123,8 @@ flowchart TD
 simple-mailer/                     # repository root — run the CLI from here
 ├── README.md
 ├── package.json                   # workspace root (workspaces: simple-mailer, cmailer)
-├── LICENSE                        # MIT
+├── LICENSE                        # Apache 2.0
+├── NOTICE                         # Apache 2.0 attribution notice
 ├── .env.example                   # MAILER_GOOGLE_* — copy to .env.local, see setup-google-workspace.md
 ├── docs/                          # design docs, guides, PRDs
 │   ├── cli-testing-guide.md       # step-by-step CLI feature test (start here)
@@ -369,4 +370,4 @@ npm run lint      # static analysis (eslint), both workspaces
 
 ## 📜 License
 
-[MIT License](./LICENSE) — Copyright (c) 2026 [CEGAANA Engineering](https://cegaana.org).
+[Apache License 2.0](./LICENSE) — Copyright 2026 [CEGAANA](https://cegaana.org). See [NOTICE](./NOTICE) for attribution.

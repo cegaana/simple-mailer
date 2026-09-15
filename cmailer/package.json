@@ -14,8 +14,12 @@
     "oauth2",
     "command-line"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "author": "CEGAANA (https://cegaana.org)",
+  "contributors": [
+    "funmu (https://github.com/funmu)",
+    "Surendira Balaji Natarajan (https://github.com/surendirabalaji)"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -31,7 +35,8 @@
     "cmailer": "./dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "NOTICE"
   ],
   "engines": {
     "node": ">=24.0.0"

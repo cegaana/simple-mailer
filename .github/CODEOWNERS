@@ -1,0 +1,4 @@
+# Every path needs a review from one of these owners before a PR can merge
+# into main (enforced once branch protection is enabled — see the note in
+# CONTRIBUTING.md and the "Pull requests" section there).
+* @funmu

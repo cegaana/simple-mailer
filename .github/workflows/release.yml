@@ -1,0 +1,33 @@
+name: Release
+
+# Fires when CONTRIBUTING.md's release steps push a tag for a published
+# package version (e.g. `simple-mailer@2.0.0` or `cmailer@2.0.0`). Creates
+# the matching GitHub Release so every npm publish has a corresponding,
+# discoverable release + tag on the repo — npm publishing itself stays a
+# manual, deliberate step (see CONTRIBUTING.md#releasing).
+on:
+  push:
+    tags:
+      - "simple-mailer@*"
+      - "cmailer@*"
+
+permissions:
+  contents: write
+
+jobs:
+  github-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --notes "See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for the full notes."

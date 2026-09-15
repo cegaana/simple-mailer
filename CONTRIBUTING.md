@@ -29,6 +29,12 @@ see "Two techniques that make this suite fast" in
 [`docs/status-and-usage.md`](docs/status-and-usage.md) before adding a test
 that waits on time.
 
+## Pull requests
+
+Every PR to `main` needs approval from a listed owner before it can merge —
+see [`.github/CODEOWNERS`](.github/CODEOWNERS). Open the PR against `main`
+and wait for a review; direct pushes to `main` are not the normal path.
+
 ## Design context
 
 [`docs/build-roadmap.md`](docs/build-roadmap.md) records the design decisions
@@ -56,4 +62,6 @@ tested against — the two must be kept in sync by hand:
    (`@cegaana/...`) and publish as public
    (`publishConfig.access: "public"` is already set in both).
 7. Tag the release (`git tag simple-mailer@X.Y.Z` and/or `cmailer@X.Y.Z`) and
-   push tags.
+   push the tag(s) — `.github/workflows/release.yml` picks up a pushed
+   `simple-mailer@*` or `cmailer@*` tag and creates the matching GitHub
+   Release automatically; nothing else to do by hand.

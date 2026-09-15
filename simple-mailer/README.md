@@ -53,4 +53,4 @@ live in the repository root:
 
 ## License
 
-MIT — see [LICENSE](https://github.com/cegaana/simple-mailer/blob/main/LICENSE).
+Apache License 2.0 — see [LICENSE](https://github.com/cegaana/simple-mailer/blob/main/LICENSE) and [NOTICE](https://github.com/cegaana/simple-mailer/blob/main/NOTICE).
