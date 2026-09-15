@@ -196,11 +196,25 @@ cmailer send --db /tmp/cmailer-gw-demo/mailer.db \
 
 `--html`/`--text` upsert the template at `--template`'s slug first (safe to
 re-run after editing those files — see `cmailer help template`); omit both to
-send an existing template unchanged. If you send several variants of a
-mailing (different ticket types, different audiences), the mapping from a
-short name to the right `--template`/`--subject`/`--html`/`--text`/`--csv`
-combination belongs in your own thin wrapper script, not in `cmailer` itself
-— `cmailer send` is the primitive that script should call.
+send an existing template unchanged.
+
+If you send several variants of a mailing (different ticket types, different
+audiences), put the mapping from a short name to the right
+`--template`/`--subject`/`--html`/`--text` combination in a JSON manifest
+and pick one with `--config <file> --preset <key>`:
+
+```bash
+cmailer send --db /tmp/cmailer-gw-demo/mailer.db \
+  --config /tmp/cmailer-gw-demo/tickets.json --preset single \
+  --csv /tmp/cmailer-gw-demo/recipients.csv --transport google-workspace
+```
+
+`cmailer template check --config <file> --preset <key> --csv <file>` checks
+the CSV has every placeholder the preset's template needs, before you send
+anything; add `--strict` to `send` to abort automatically on the same gap
+instead of only warning. See step 10 of the
+**[CLI Testing Guide](./cli-testing-guide.md#10-manifest-driven-sends--template-check)**
+for the full manifest format and a worked example.
 
 ---
 

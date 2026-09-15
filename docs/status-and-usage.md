@@ -10,7 +10,7 @@ real ones).
 
 ## 1. What is done
 
-All of draft2 §14's v1 scope, including real email delivery. The library
+All of [draft2](./mail-subsystem-draft2.md) §14's v1 scope, including real email delivery. The library
 (`simple-mailer/`, `@cegaana/simple-mailer`) and the CLI (`cmailer/`,
 `@cegaana/cmailer`) are separate npm workspaces.
 
@@ -33,6 +33,9 @@ All of draft2 §14's v1 scope, including real email delivery. The library
 | Public API (`MailerEngine`) | done | `engine.ts` |
 | CLI (modular: one command-group module per file) | done | `cmailer/src/cli.ts`, `cmailer/src/commands/` |
 | `cmailer send` — create + enqueue + dispatch + stats, one call | done | `cmailer/src/commands/send.ts` |
+| Manifest-driven `send`/`template check` — read template + subject + body paths from a JSON config, preflight-check placeholders against CSV columns | done | `cmailer/src/manifest.ts`, `commands/template.ts` |
+| Placeholder inspection — `inspectVariables()` reports each variable's default | done | `simple-mailer/src/template.ts` |
+| `MailerEngine.getTemplate(idOrSlug)` — read a stored template back | done | `engine.ts` |
 
 ### Not done
 
@@ -190,7 +193,8 @@ techniques" below).
 | `csv.test.ts` | CSV → `RecipientInput[]`: name/metadata mapping, case-insensitive columns, missing-column and empty-file errors |
 | `transport.test.ts` | `--transport` defaulting to local-file, `mock` selection, unknown-value error, `google-workspace` via flags/env vars/flag-over-env precedence, missing-credential error |
 | `env.test.ts` | `.env`/`.env.local` loading and precedence |
-| `send.test.ts` | upsert-then-send, repeat send overwrites the same template (not a duplicate), sending an existing template unchanged, `--html` without `--text` throws |
+| `send.test.ts` | upsert-then-send, repeat send overwrites the same template (not a duplicate), sending an existing template unchanged, `--html` without `--text` throws, `--config`/`--preset` resolution, `--strict` aborts on a missing placeholder |
+| `template.test.ts` | `template check` against `--html`/`--text` and against `--config`/`--preset`; exit code 0 when the CSV covers every required placeholder, 1 when one is missing |
 
 ### Two techniques that make this suite fast
 

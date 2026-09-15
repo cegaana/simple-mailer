@@ -86,15 +86,16 @@ cmailer --version           # or -v
 ## 🏛️ System Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph IN["Input Seams (Recipient Sources)"]
+        direction LR
         CSV["CSV Ingestion"]
         SQL["Database Query (CRM)"]
         MEM["In-Memory Array"]
     end
 
     subgraph CORE["Simple Mailer Engine Core"]
-        direction TB
+        direction LR
         QM["Queue Manager\n(_mailer_queue)"] --> SM["State Machine\n(6-State Engine)"]
         SM --> D["Paced Dispatcher\n(Nodemailer Throttle)"]
         D <--> TM["Template Engine\n(_mailer_templates)"]
@@ -102,6 +103,7 @@ flowchart LR
     end
 
     subgraph OUT["Output Sinks (Transports)"]
+        direction TB
         LOCAL["LocalFileTransport\n(cmailer default — no credentials)"]
         MOCK["MockTransport\n(unit tests)"]
         GMAIL["GoogleWorkspaceTransport\n(Gmail OAuth2 SMTP)"]
@@ -245,6 +247,23 @@ const report = await mailer.dispatch(campaignId, {
 console.log(`Dispatch completed in ${report.durationMs}ms:`, report);
 ```
 
+### Inspecting a Template
+
+`inspectVariables()` lists a template's placeholders and marks which ones
+have a `| default(...)` fallback. `cmailer template check` and `send`'s
+preflight check both use it to compare a template's required placeholders
+against a CSV's columns before any campaign exists.
+
+```ts
+import { inspectVariables } from '@cegaana/simple-mailer';
+
+const template = await engine.getTemplate('speaker-invite'); // by id or slug; null if not found
+
+const vars = inspectVariables(template.subject, template.bodyHtml, template.bodyText);
+// [{ name: 'event_name', hasDefault: false, defaultValue: undefined },
+//  { name: 'first_name', hasDefault: true, defaultValue: 'there' }]
+```
+
 ---
 
 ## ⌨️ CLI Commands
@@ -340,6 +359,8 @@ npm run lint      # static analysis (eslint), both workspaces
 - **[Status & Usage](docs/status-and-usage.md)** — what is done, what is not,
   how to run and test it
 - **[Build Roadmap](docs/build-roadmap.md)** — phases, gates and the decision log
+- **[Conceptual Design & State Machine](docs/mail-subsystem-draft2.md)** —
+  the reconciled design; source of truth for the state machine and schema
 - **[PRD — Standalone Mailer Subsystem](docs/prd-mailer-subsystem.md)** *(v2 surface)*
 - **[PRD — Mail Template Definition & Management](docs/prd-mail-templates.md)** *(v2 surface)*
 - **[Canonical SQLite DDL Schema](simple-mailer/schema/mailer-schema.sql)**

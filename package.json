@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Project root for simple-mailer. Docs and README live here; the library package lives in ./simple-mailer and the CLI (`cmailer`) lives in ./cmailer. Run the CLI from this folder.",
   "license": "MIT",
+  "author": "CEGAANA (https://cegaana.org)",
   "homepage": "https://cegaana.org",
   "repository": {
     "type": "git",

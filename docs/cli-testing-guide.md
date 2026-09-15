@@ -505,7 +505,128 @@ flagged. Set your own with `--delay <ms>`.
 
 ---
 
-## 10. Error handling
+## 10. Manifest-driven sends & template check
+
+A manifest file holds one or more presets. Each preset names a template
+slug, a subject, and body files. `--config` points at the manifest.
+`--preset` picks one preset from it. Use a manifest to send several similar
+mailings (different ticket types, for example) without retyping the same
+flags each time.
+
+Create a manifest that points at the fixtures from step 4:
+
+```bash
+cat > /tmp/cmailer-demo/tickets.json <<'JSON'
+{
+  "speaker": {
+    "name": "Speaker invite",
+    "slug": "speaker-invite",
+    "subject": "Invitation for {{ first_name | default('there') }}",
+    "html": "body.html",
+    "text": "body.txt"
+  }
+}
+JSON
+```
+
+### Check a template before you send it
+
+`template check` lists every placeholder in a template and marks which ones
+have a default. Add `--csv` to also check that the CSV has a column for
+every required placeholder.
+
+```bash
+cmailer template check --db $DB \
+  --config /tmp/cmailer-demo/tickets.json --preset speaker \
+  --csv /tmp/cmailer-demo/recipients.csv
+```
+
+```
+Template: /tmp/cmailer-demo/body.html, /tmp/cmailer-demo/body.txt
+Subject:  Invitation for {{ first_name | default('there') }}
+Placeholders found (3):
+  - event_name (required)
+  - first_name (optional, default: "there")
+  - grad_year (required)
+
+CSV: /tmp/cmailer-demo/recipients.csv (5 columns: email, name, first_name, event_name, grad_year)
+
+✓ Validation passed: All required template variables are present in CSV.
+```
+
+The CSV has a column for every required placeholder, so the check passes and
+`cmailer template check` exits `0`.
+
+### Send from a preset
+
+`cmailer send --config <file> --preset <key>` reads the slug, subject, and
+body files from the preset, then runs the same upsert → create → enqueue →
+dispatch → stats flow as plain `cmailer send`:
+
+```bash
+cmailer send --db $DB \
+  --config /tmp/cmailer-demo/tickets.json --preset speaker \
+  --csv /tmp/cmailer-demo/recipients.csv --delay 0 --dry-run
+```
+
+```
+1. Template upserted: <template-id>
+
+2. Campaign created: <campaign-id>
+
+3. Queued 2, duplicates 0, suppressed 1
+Sending via mock (--dry-run)
+[ 50%] sent     charlie@example.com
+[100%] sent     jane@example.com
+
+4. Report:
+{
+  "campaignId": "<campaign-id>",
+  "status": "completed",
+  "totalProcessed": 2,
+  "sentCount": 2,
+  "retriedCount": 0,
+  "failedCount": 0,
+  "durationMs": ...,
+  "dryRun": true
+}
+
+5. Stats:
+{ "campaignId": "<campaign-id>", "campaignName": "Speaker invite", "status": "completed", ... "successRate": "100.0%", ... }
+```
+
+`--dry-run` sends through the mock transport, so this run creates a real
+campaign but sends nothing. Drop `--dry-run` to send for real, exactly like
+plain `cmailer send`.
+
+### Strict mode stops a bad CSV early
+
+Point `send` at a CSV that is missing a required column:
+
+```bash
+cat > /tmp/cmailer-demo/bad-recipients.csv <<'EOF'
+email,name,first_name,event_name
+charlie@example.com,Charlie Brown,Charlie,CEGAANA Fall Event
+EOF
+
+cmailer send --db $DB \
+  --config /tmp/cmailer-demo/tickets.json --preset speaker \
+  --csv /tmp/cmailer-demo/bad-recipients.csv --strict --dry-run
+```
+
+```
+Preflight check failed: Template requires variable(s) not found in CSV (/tmp/cmailer-demo/bad-recipients.csv): grad_year
+Available CSV columns: email, name, first_name, event_name
+```
+
+`bad-recipients.csv` has no `grad_year` column, and the template needs one.
+`--strict` stops `send` before it creates a campaign, and the command exits
+`1`. Without `--strict`, `send` prints the same warning to the console and
+continues — useful when the missing variable is expected, not a mistake.
+
+---
+
+## 11. Error handling
 
 Bad input produces one plain sentence and a non-zero exit code — no stack
 traces.
@@ -530,7 +651,7 @@ Both exit `1`, so they fail loudly in a script (`echo $?` prints `1`).
 
 ---
 
-## 11. Look underneath (optional)
+## 12. Look underneath (optional)
 
 Everything lives in one SQLite file, in tables prefixed `_mailer_` so the engine
 can be embedded in an existing app's database without colliding with anything:
@@ -548,7 +669,7 @@ history — one row per *attempt*, including failures.
 
 ---
 
-## 12. Clean up
+## 13. Clean up
 
 ```bash
 rm -rf /tmp/cmailer-demo
@@ -566,6 +687,7 @@ rm -rf /tmp/cmailer-demo
 | `template create --slug --name --subject --html <file> --text <file>` | Create a new template |
 | `template upsert --slug --name --subject --html <file> --text <file>` | Create or update a template by slug |
 | `template preview <slug> [--data '<json>']` | Render a template without sending |
+| `template check [--html <file> --text <file>] [--slug <slug>] [--config <file> --preset <key>] [--csv <file>]` | List a template's placeholders; with `--csv`, check every required one has a column |
 | `template list` | List templates |
 | `campaign create --name --subject --template <slug> [--scheduled-at <iso>]` | Create a campaign |
 | `campaign enqueue <id> --csv <file>` | Load recipients into a campaign |
@@ -573,6 +695,7 @@ rm -rf /tmp/cmailer-demo
 | `campaign list [--stats]` | List campaigns with status and MODE (pass `--stats` for full delivery metrics table) |
 | `dispatch <id> [--delay <ms>] [--limit <n>] [--transport <kind>] [--out-dir <path>] [--dry-run]` | Send queued messages |
 | `send --name --subject --template <slug> [--html <file> --text <file>] --csv <file>` | Create + enqueue + dispatch + stats in one shot |
+| `send [--config <file> --preset <key>] --csv <file> [--strict]` | Same, with template/subject/body resolved from a manifest preset |
 | `suppression add <email> --reason <r>` | Add to the do-not-send list |
 | `suppression list` | List suppressed addresses |
 | `suppression stats` | Suppression counts, total and by reason (JSON) |
@@ -580,6 +703,10 @@ rm -rf /tmp/cmailer-demo
 | `--transport <local-file\|google-workspace\|mock>` | (global) delivery transport, default `local-file` |
 | `--out-dir <path>` | (global) output directory for `--transport local-file`, default `./data/outbox` |
 | `--dry-run` | Route dispatch through `MockTransport` without sending or writing to disk |
+| `--config <file>` | Read template slug, subject, and body file paths from a JSON manifest |
+| `--preset <key>` (alias `--ticket-type`) | Pick one preset from `--config`'s manifest |
+| `--template-dir <path>` | Base directory for a preset's `html`/`text` file paths, if not next to the manifest |
+| `--strict` | On `send`, abort instead of warn when the CSV is missing a required placeholder |
 
 ---
 

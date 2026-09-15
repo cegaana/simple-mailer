@@ -460,13 +460,19 @@ see the behaviour than take this document's word for it.
 ## Known gaps
 
 - **Commands described in the PRD but not built:** `campaign cancel` / `pause` /
-  `resume`, `template validate`, `suppression remove`.
+  `resume`, `suppression remove`.
 - **No schema migrations.** Changing a table will not update databases that
   already exist.
 
 Real network delivery is built — see the
 **[Google Workspace CLI Walkthrough](./cli-walkthrough-google-workspace.md)**
 for sending through a real Gmail account instead of `LocalFileTransport`.
+
+Sending the same kind of mailing repeatedly (different ticket types, say)?
+`cmailer send --config <file> --preset <key>` and `cmailer template check`
+read the template slug, subject, and body files from a manifest instead of
+flags typed by hand — see step 10 of the
+**[CLI Testing Guide](./cli-testing-guide.md#10-manifest-driven-sends--template-check)**.
 
 See [`build-roadmap.md`](./build-roadmap.md) for the full picture and
 [`status-and-usage.md`](./status-and-usage.md) for the library API.

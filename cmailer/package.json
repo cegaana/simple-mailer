@@ -2,7 +2,20 @@
   "name": "@cegaana/cmailer",
   "version": "2.0.0",
   "description": "Command-line interface for simple-mailer — local-file and Google Workspace mail delivery.",
+  "keywords": [
+    "email",
+    "mailer",
+    "cli",
+    "bulk-email",
+    "campaign",
+    "newsletter",
+    "gmail",
+    "smtp",
+    "oauth2",
+    "command-line"
+  ],
   "license": "MIT",
+  "author": "CEGAANA (https://cegaana.org)",
   "publishConfig": {
     "access": "public"
   },

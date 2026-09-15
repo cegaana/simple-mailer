@@ -18,11 +18,12 @@
 > [`status-and-usage.md`](./status-and-usage.md) or the
 > [`cli-testing-guide.md`](./cli-testing-guide.md) instead.
 >
-> Source of truth for v1 scope: [`../simple-mailer/schema/mailer-schema.sql`](../simple-mailer/schema/mailer-schema.sql)
+> Source of truth: [`mail-subsystem-draft2.md`](./mail-subsystem-draft2.md) §14 for
+> v1 scope, [`../simple-mailer/schema/mailer-schema.sql`](../simple-mailer/schema/mailer-schema.sql)
 > for table/column names. Where the PRDs
 > ([`prd-mailer-subsystem.md`](./prd-mailer-subsystem.md),
-> [`prd-mail-templates.md`](./prd-mail-templates.md)) disagree with what's
-> documented below, **this roadmap wins** — the PRDs describe the v2 surface.
+> [`prd-mail-templates.md`](./prd-mail-templates.md)) disagree with draft2,
+> **draft2 wins** — the PRDs describe the v2 surface.
 
 ---
 
@@ -69,6 +70,8 @@ These extend draft2 §16. Each was a real fork in the road.
 | 37 | **`upsertTemplate` is one `INSERT ... ON CONFLICT (slug) DO UPDATE ... RETURNING id` statement, not a caller-assembled get-then-create-or-update** | Same atomicity argument as `claimDueJobs` (decision 22) — a caller-assembled version has a window a concurrent upsert of the same slug could land in. `id` is only bound on insert; `ON CONFLICT` never touches it, so `RETURNING id` gives back the existing row's id on an update, the freshly generated one on insert, and the caller never has to ask which happened. |
 | 38 | **`cmailer send` (create + enqueue + dispatch + stats in one call) takes `--html`/`--text` as an optional pair that upserts the template first, not a separate flag to opt in** | Mirrors how an operator actually iterates on a recurring mailing: edit the body files, rerun the same command. Requiring both together (enforced by `need()`, not a separate check) rather than allowing one without the other avoids a half-updated template being a distinct, harder-to-debug state. |
 | 39 | **Campaign stats overview table & automatic dry-run/live mode audit** | `cmailer campaign stats` without `<campaign-id>` (and `cmailer campaign list --stats`) prints a tabular delivery summary across all campaigns, including a `MODE` column (`dry-run` vs `live` vs `-`). `CampaignStats` and `DispatchReport` carry `isDryRun` and `mode`, derived from whether attempts routed through `MockTransport`. |
+| 40 | **`--config`/`--preset` populate flags; they do not replace them** | `applyManifestConfig()` fills in `template`, `subject`, `name`, `html`, `text` only where the caller left them unset. An explicit `--subject` on the command line still wins. One resolution order, so a manifest is a default, never a surprise override. |
+| 41 | **The preflight check warns by default; `--strict` turns the warning into a hard failure** | Most CSV imports have a small, fixable gap (a missing column) that an operator wants to see and decide about, not one that should silently block a `dispatch`. `cmailer send --strict` and `cmailer template check`'s own non-zero exit cover the case where the caller wants the failure enforced. |
 
 ---
 
@@ -96,6 +99,7 @@ Phases are tracked in the engine's own job-state vocabulary (§8): `sent` = done
 | 11b | **Google Workspace Gmail transport** | `sent` |
 | 12 | Template upsert + `cmailer send` combo command; CLI split into `commands/` modules | `sent` |
 | 13 | All-campaign stats overview table & dry-run / live mode audit | `sent` |
+| 14 | Manifest-driven `send`/`template check` & preflight placeholder validation | `sent` |
 
 ### What exists today
 
@@ -207,6 +211,42 @@ Domain-specific mailing content (subject lines, ticket-type template
 selection, which HTML file goes with which slug) stays in the operator's own
 wrapper script — see `docs/cli-walkthrough-google-workspace.md`'s note on
 this — not in `cmailer` itself.
+
+---
+
+## 14 — Manifest-driven send & template preflight check `sent`
+
+An operator with several ticket types (single, double, student, ...) repeats
+the same subject, HTML file, and text file for every send. A manifest file
+removes that repetition.
+
+- [x] **`--config <file> [--preset <key>]`** on `cmailer send` and
+      `cmailer template check` — reads a JSON manifest that maps a preset key
+      to `{ slug, name, subject, html, text }`. `applyManifestConfig()` fills
+      in only the flags the caller left unset (decision 40).
+- [x] **`cmailer template check`** — inspects a template's placeholders
+      (`--html`/`--text`, or `--config`/`--preset`) and reports which ones
+      have a default and which are required. With `--csv`, it also checks
+      that every required placeholder has a matching column, and exits 1 if
+      one is missing.
+- [x] **`cmailer send`'s automatic preflight check** — runs the same check
+      before creating a campaign, so a bad CSV surfaces before any database
+      row exists. It warns by default; `--strict` makes a missing placeholder
+      a hard failure (decision 41).
+- [x] **`inspectVariables()`** — new export from `@cegaana/simple-mailer`.
+      Reports each placeholder's name and whether it has a `| default(...)`.
+      `extractVariables()` now calls it and keeps its old, name-only
+      signature for existing callers.
+- [x] **`MailerEngine.getTemplate(idOrSlug)`** — reads a stored template
+      back. `send`'s preflight check needs it: when `--html`/`--text` are
+      omitted, it checks the *existing* template's placeholders, not an
+      absent new one.
+
+**Gate:** `cmailer template check` passes against a manifest preset and fails
+(exit 1) against a CSV missing a required column; `cmailer send --strict`
+aborts before creating a campaign under the same missing-column CSV. Covered
+by `cmailer/tests/template.test.ts` and the `--config`/`--strict` cases in
+`cmailer/tests/send.test.ts`.
 
 ---
 

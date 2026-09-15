@@ -2,7 +2,24 @@
   "name": "@cegaana/simple-mailer",
   "version": "2.0.0",
   "description": "Self-contained, embeddable email queue and dispatch engine",
+  "keywords": [
+    "email",
+    "mailer",
+    "email-queue",
+    "bulk-email",
+    "transactional-email",
+    "campaign",
+    "newsletter",
+    "email-dispatch",
+    "smtp",
+    "gmail",
+    "oauth2",
+    "sqlite",
+    "rate-limiting",
+    "typescript"
+  ],
   "license": "MIT",
+  "author": "CEGAANA (https://cegaana.org)",
   "publishConfig": {
     "access": "public"
   },
