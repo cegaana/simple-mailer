@@ -206,7 +206,12 @@ export class MailerEngine {
       // one-recipient campaign waits 2.5s for nothing.
       if (index > 0 && delayMs > 0) await this.sleep(delayMs);
 
-      const message = renderMessage(template, campaign.subject, job.metadata);
+      const mergeData: Record<string, unknown> = {
+        email: job.email,
+        ...(job.name !== undefined ? { name: job.name } : {}),
+        ...job.metadata,
+      };
+      const message = renderMessage(template, campaign.subject, mergeData);
       const outcome = await transport({
         to: job.email,
         ...(job.name === undefined ? {} : { toName: job.name }),

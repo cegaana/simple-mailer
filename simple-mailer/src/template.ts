@@ -48,6 +48,8 @@ function stringify(value: unknown): string | undefined {
   return undefined;
 }
 
+const SECTION_REGEX = /\{\{([#^])\s*([a-zA-Z0-9_.]+)\s*\}\}([\s\S]*?)\{\{\/\s*\2\s*\}\}/;
+
 export interface RenderOptions {
   /** Throw on a placeholder with no value and no default. */
   strict?: boolean;
@@ -60,7 +62,21 @@ export function renderString(
   data: Record<string, unknown>,
   options: RenderOptions = {},
 ): string {
-  return template.replace(PLACEHOLDER, (_match, path: string, _q, fallback?: string) => {
+  let rendered = template;
+  // Process sections: truthy {{#key}}...{{/key}} and inverted {{^key}}...{{/key}}
+  while (SECTION_REGEX.test(rendered)) {
+    rendered = rendered.replace(SECTION_REGEX, (_match, type: string, path: string, content: string) => {
+      const val = lookup(data, path);
+      const isTruthy = val !== null && val !== undefined && val !== "" && val !== false;
+      if (type === "#") {
+        return isTruthy ? content : "";
+      } else {
+        return !isTruthy ? content : "";
+      }
+    });
+  }
+
+  return rendered.replace(PLACEHOLDER, (_match, path: string, _q, fallback?: string) => {
     const resolved = stringify(lookup(data, path)) ?? fallback;
 
     if (resolved === undefined) {
@@ -114,6 +130,12 @@ export function inspectVariables(...templates: string[]): TemplateVariable[] {
       } else if (!hasDefault) {
         existing.hasDefault = false;
         existing.defaultValue = undefined;
+      }
+    }
+    for (const match of t.matchAll(/\{\{[#^]\s*([a-zA-Z0-9_.]+)\s*\}\}/g)) {
+      const name = match[1];
+      if (name && !map.has(name)) {
+        map.set(name, { name, hasDefault: true });
       }
     }
   }

@@ -34,7 +34,11 @@ export function readCsv(path: string): RecipientInput[] {
     const cells = splitCsvLine(line);
     const metadata: Record<string, unknown> = {};
     columns.forEach((column, i) => {
-      if (i !== emailAt && column.toLowerCase() !== "name") metadata[column] = cells[i] ?? "";
+      let val = cells[i] ?? "";
+      if (column.toLowerCase() === "badge_id" && /^\d{8}$/.test(val.trim())) {
+        val = `${val.trim().slice(0, 4)}-${val.trim().slice(4)}`;
+      }
+      if (i !== emailAt && column.toLowerCase() !== "name") metadata[column] = val;
     });
     const nameAt = columns.findIndex((c) => c.toLowerCase() === "name");
     const name = nameAt === -1 ? undefined : cells[nameAt];
