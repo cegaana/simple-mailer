@@ -28,7 +28,12 @@
     "typecheck": "npm run typecheck --workspace simple-mailer && npm run typecheck --workspace cmailer",
     "lint": "npm run lint --workspace simple-mailer && npm run lint --workspace cmailer",
     "test": "npm test --workspace simple-mailer && npm test --workspace cmailer",
-    "cmailer": "node ./cmailer/dist/cli.js"
+    "cmailer": "node ./cmailer/dist/cli.js",
+    "publish:packages": "npm publish --workspace simple-mailer && npm publish --workspace cmailer",
+    "publish:lib": "npm publish --workspace simple-mailer",
+    "publish:cli": "npm publish --workspace cmailer",
+    "tags:update": "node scripts/push-release-tags.js",
+    "release:tags": "node scripts/push-release-tags.js"
   },
   "allowScripts": {
     "better-sqlite3@13.0.3": true,

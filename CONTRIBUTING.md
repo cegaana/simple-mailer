@@ -57,11 +57,14 @@ tested against — the two must be kept in sync by hand:
 3. `npm run typecheck && npm run lint && npm test` — must be clean.
 4. `npm run build`.
 5. Add an entry to [`CHANGELOG.md`](CHANGELOG.md).
-6. `npm publish --workspace simple-mailer` (if it changed), then
-   `npm publish --workspace cmailer`. Both packages are scoped
-   (`@cegaana/...`) and publish as public
-   (`publishConfig.access: "public"` is already set in both).
-7. Tag the release (`git tag simple-mailer@X.Y.Z` and/or `cmailer@X.Y.Z`) and
-   push the tag(s) — `.github/workflows/release.yml` picks up a pushed
-   `simple-mailer@*` or `cmailer@*` tag and creates the matching GitHub
-   Release automatically; nothing else to do by hand.
+6. Publish to npm:
+   ```bash
+   npm run publish:packages
+   # or individually: npm run publish:lib / npm run publish:cli
+   ```
+   Both packages are scoped (`@cegaana/...`) and publish as public (`publishConfig.access: "public"` is already set in both).
+7. Create and push release git tags:
+   ```bash
+   npm run release:tags
+   ```
+   This automatically reads versions from both packages, tags the release (`simple-mailer@X.Y.Z` and `cmailer@X.Y.Z`), and pushes the tags. `.github/workflows/release.yml` picks up the pushed tags and creates the matching GitHub Releases automatically.
