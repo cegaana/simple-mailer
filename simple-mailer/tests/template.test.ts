@@ -40,6 +40,17 @@ describe("renderString", () => {
     expect(renderString("Hi {{ nope }}", {})).toBe("Hi ");
     expect(() => renderString("Hi {{ nope }}", {}, { strict: true })).toThrow(/nope/);
   });
+
+  it("renders truthy and falsy sections correctly", () => {
+    const tmpl = "{{#branch}}{{ branch }} {{#grad_year}}'{{ grad_year }}{{/grad_year}}{{/branch}}";
+    expect(renderString(tmpl, { branch: "CSE", grad_year: 1992 })).toBe("CSE '1992");
+    expect(renderString(tmpl, { branch: "CSE" })).toBe("CSE ");
+    expect(renderString(tmpl, {})).toBe("");
+
+    const orgTmpl = "{{ company }}{{#role}} — {{ role }}{{/role}}";
+    expect(renderString(orgTmpl, { company: "Zanavu", role: "CEO" })).toBe("Zanavu — CEO");
+    expect(renderString(orgTmpl, { company: "Zanavu" })).toBe("Zanavu");
+  });
 });
 
 describe("renderMessage", () => {
