@@ -360,7 +360,7 @@ npm run lint      # static analysis (eslint), both workspaces
 - **[Status & Usage](docs/status-and-usage.md)** — what is done, what is not,
   how to run and test it
 - **[Build Roadmap](docs/build-roadmap.md)** — phases, gates and the decision log
-- **[Conceptual Design & State Machine](docs/mail-subsystem-draft2.md)** —
+- **[Conceptual Design & State Machine](docs/mail-subsystem-design.md)** —
   the reconciled design; source of truth for the state machine and schema
 - **[PRD — Standalone Mailer Subsystem](docs/prd-mailer-subsystem.md)** *(v2 surface)*
 - **[PRD — Mail Template Definition & Management](docs/prd-mail-templates.md)** *(v2 surface)*

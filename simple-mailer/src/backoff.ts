@@ -7,7 +7,7 @@
  *
  * Exponential from a base delay, doubling per attempt already made.
  * v1 has no jitter and no cap: both only matter with multiple workers, and
- * draft2 §14 defers them. `BACKOFF_CEILING_MS` exists so the doubling cannot
+ * mail-subsystem-design.md §14 defers them. `BACKOFF_CEILING_MS` exists so the doubling cannot
  * overflow into absurdity if `attempts` is ever unexpectedly large.
  */
 

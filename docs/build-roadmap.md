@@ -18,12 +18,12 @@
 > [`status-and-usage.md`](./status-and-usage.md) or the
 > [`cli-testing-guide.md`](./cli-testing-guide.md) instead.
 >
-> Source of truth: [`mail-subsystem-draft2.md`](./mail-subsystem-draft2.md) §14 for
+> Source of truth: [`mail-subsystem-design.md`](./mail-subsystem-design.md) §14 for
 > v1 scope, [`../simple-mailer/schema/mailer-schema.sql`](../simple-mailer/schema/mailer-schema.sql)
 > for table/column names. Where the PRDs
 > ([`prd-mailer-subsystem.md`](./prd-mailer-subsystem.md),
-> [`prd-mail-templates.md`](./prd-mail-templates.md)) disagree with draft2,
-> **draft2 wins** — the PRDs describe the v2 surface.
+> [`prd-mail-templates.md`](./prd-mail-templates.md)) disagree with the design spec,
+> **the design spec wins** — the PRDs describe the v2 surface.
 
 ---
 
@@ -41,7 +41,7 @@
 
 ### Design decisions made during the build
 
-These extend draft2 §16. Each was a real fork in the road.
+These extend the design document §16 ([mail-subsystem-design.md](./mail-subsystem-design.md)). Each was a real fork in the road.
 
 | # | Decision | Rationale |
 |---|----------|-----------|
@@ -49,14 +49,14 @@ These extend draft2 §16. Each was a real fork in the road.
 | 16 | **Operational timestamps are passed in; `created_at` is a DDL default** | `next_attempt_at` and `locked_at` are read back and branched on, so tests must control them. `created_at` is only ever read by humans. Rule: *a timestamp the code branches on must be injectable.* |
 | 17 | **`id` generated in the provider, typed `string` not `UUID`** | SQLite has no UUID function, so it happens in JS regardless. `string` keeps semantic slugs (PRD §2) available without changing every signature. |
 | 18 | **Methods return values; failures throw** | A failed `INSERT` throws in `better-sqlite3`, so a `boolean` return advertises an outcome that cannot happen. Corollary: catch only when you can act — wrapping a `SqliteError` in a generic `Error` destroys the `.code` the enqueue path needs. |
-| 19 | **`NewCampaign` carries `templateId`, never inline text/html** | Draft2 §6 is referenced-only in v1. The PRD's `createCampaign(name, subject, {text, html})` describes the v2 surface. |
+| 19 | **`NewCampaign` carries `templateId`, never inline text/html** | The design spec §6 is referenced-only in v1. The PRD's `createCampaign(name, subject, {text, html})` describes the v2 surface. |
 | 20 | **The campaign's `subject` is the one that sends**; the template's is a starting value copied at creation | `_mailer_campaigns.subject` is `NOT NULL`, and §3 snapshot coupling means a mid-campaign template edit must not change the subject of the unsent half. |
 | 21 | **`enqueueRecipients` is one transaction with `INSERT OR IGNORE`** | All-or-nothing, so a failure is a state you repeat rather than diagnose. `OR IGNORE` stops an expected duplicate from rolling back the batch, while a real failure (FK on an unknown campaign) still throws and rolls everything back. Verified. |
 | 22 | **`claimDueJobs` is a single `UPDATE ... RETURNING`** | Atomicity cannot be assembled by a caller — the gap between find-then-mark is exactly where a second worker or the lease sweeper claims the same job and sends it twice. The `LIMIT` sits in a subquery, since `UPDATE ... LIMIT` needs a non-default compile flag. |
 | 23 | **`SendOutcome` is a discriminated union, not a string enum** | `rate_limited` carries a cooldown, `sent` carries a provider message id. A tagged union lets the compiler enforce which fields exist in which branch. |
 | 24 | **The engine is async; the provider is synchronous** | This layer awaits the transport and sleeps between sends. Storage does not block on a network, so making it async would be theatre. |
 | 25 | **The clock and the sleep function are injected into `MailerEngine`** | Lease recovery and backoff are time-dependent by nature. Injecting both turns a 61-second test into a 2-millisecond one, and it is the only way to test expiry without fabricating rows around the code under test. |
-| 26 | **`_mailer_logs` gained `provider_message_id`; two missing indexes added** | Draft2 §12 says logs record the provider message id and PRD §2 specifies both indexes; the DDL had neither. |
+| 26 | **`_mailer_logs` gained `provider_message_id`; two missing indexes added** | The design spec §12 says logs record the provider message id and PRD §2 specifies both indexes; the DDL had neither. |
 | 27 | **`CampaignStats` gained `processingCount` and `cancelledCount`** | The PRD's fields could not sum to `totalQueued`, so no caller could trust the numbers. `successRate` stays a formatted string — it is a display value; arithmetic should use the counts. |
 | 28 | **Library and CLI split into sibling packages** (`simple-mailer/`, `cmailer/`) | Decision 1 in this table already separated the concerns in code (`MailerEngine` never took a db path or CLI flags); this made the npm-package boundary match it, so `cmailer` can only reach the library's public `exports["."]`. |
 | 29 | **Every delivery channel is named `<Kind>Transport`** (`MockTransport`, `LocalFileTransport`, `GoogleWorkspaceTransport`) | One naming convention across the `EmailTransport` seam, so a new channel is obviously a peer of the existing ones rather than a special case. |
@@ -252,7 +252,7 @@ by `cmailer/tests/template.test.ts` and the `--config`/`--strict` cases in
 
 ## 07 — Queue engine `sent`
 
-Draft2's twice-deferred Phase 5, and the hardest correctness work in the project.
+The design specification's twice-deferred Phase 5, and the hardest correctness work in the project.
 
 - [x] **`claimDueJobs(campaignId, limit, now)`** — single `UPDATE ... RETURNING`;
       takes `pending`/`retrying` jobs whose `next_attempt_at <= now` into
@@ -275,7 +275,7 @@ expires, and a job that fails three times lands in `failed` with exactly three
 the `onProgress` callback, the `rate_limited` abort that pauses the campaign, and
 an audit row appended to `_mailer_logs` per attempt.
 
-Also needs, at the provider level: **log write** and **stats query** (draft2 §10).
+Also needs, at the provider level: **log write** and **stats query** ([mail-subsystem-design.md](./mail-subsystem-design.md) §10).
 
 **Gate:** a simulated 429 leaves the campaign `paused` and returns
 `status: 'aborted'` with an `abortReason` — no further sends.

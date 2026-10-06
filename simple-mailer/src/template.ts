@@ -11,7 +11,7 @@ import type { MailerTemplate, RenderedMessage } from "./types.js";
  * with dotted paths (`{{ contact.profile.city }}`). Values interpolated into
  * HTML are entity-escaped; the text body is left as-is.
  *
- * Deferred (draft2 §6): `{{{ raw }}}`, `system.*`, signed unsubscribe URLs,
+ * Deferred (mail-subsystem-design.md §6): `{{{ raw }}}`, `system.*`, signed unsubscribe URLs,
  * `{{ signature }}`.
  */
 

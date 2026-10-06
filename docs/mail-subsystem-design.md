@@ -1,8 +1,8 @@
-# Mailer Engine — Design Document (v2)
- 
-> Status: **v2 design.**
-> This version merges our phased design work with the `simple-mailer` repo's
-> canonical schema and PRDs. Sections marked _Deferred_ are intentionally out of v1 scope.
+# Mailer Engine — Conceptual Design & State Machine Specification
+
+> Status: **Ratified Subsystem Architecture & Design Specification.**
+> This document specifies the architectural foundations, formal state machines,
+> and storage seams for `simple-mailer`. Sections marked _Deferred_ are intentionally out of v1 scope.
 > Naming follows the repo's canonical `schema/mailer-schema.sql` so the design and the
 > DDL stay in lockstep.
  

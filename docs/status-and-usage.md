@@ -10,7 +10,7 @@ real ones).
 
 ## 1. What is done
 
-All of [draft2](./mail-subsystem-draft2.md) §14's v1 scope, including real email delivery. The library
+All of [the design specification](./mail-subsystem-design.md) §14's v1 scope, including real email delivery. The library
 (`simple-mailer/`, `@cegaana/simple-mailer`) and the CLI (`cmailer/`,
 `@cegaana/cmailer`) are separate npm workspaces.
 
