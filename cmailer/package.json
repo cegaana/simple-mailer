@@ -26,13 +26,13 @@
   "homepage": "https://cegaana.org",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cegaana/simple-mailer.git",
+    "url": "git+https://github.com/cegaana/simple-mailer.git",
     "directory": "cmailer"
   },
   "bugs": "https://github.com/cegaana/simple-mailer/issues",
   "type": "module",
   "bin": {
-    "cmailer": "./dist/cli.js"
+    "cmailer": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -44,6 +44,7 @@
   "scripts": {
     "dev": "tsx src/cli.ts",
     "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
