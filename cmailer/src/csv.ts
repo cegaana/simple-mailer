@@ -8,20 +8,29 @@ const splitCsvLine = (line: string): string[] =>
     .slice(0, -1 || undefined);
 
 export function parseCsvHeader(headerLine: string): string[] {
-  return splitCsvLine(headerLine);
+  return splitCsvLine(headerLine.replace(/^\uFEFF/, ""));
 }
 
 export function readCsvColumns(path: string): string[] {
   const [header] = readFileSync(path, "utf8")
+    .replace(/^\uFEFF/, "")
     .split(/\r?\n/)
     .filter((l) => l.trim() !== "");
   if (!header) throw new Error(`${path} is empty`);
-  return parseCsvHeader(header);
+  const rawCols = parseCsvHeader(header);
+  const normalized = rawCols.map((c) => c.toLowerCase().replace(/\s+/g, "_"));
+  return [...new Set([...rawCols, ...normalized])];
 }
+
+const isInitialOnly = (s: string): boolean => {
+  const clean = s.replace(/\./g, "").trim();
+  return clean.length <= 1;
+};
 
 /** Minimal CSV reader: header row, comma separated, optional double quotes. */
 export function readCsv(path: string): RecipientInput[] {
   const [header, ...lines] = readFileSync(path, "utf8")
+    .replace(/^\uFEFF/, "")
     .split(/\r?\n/)
     .filter((l) => l.trim() !== "");
   if (!header) throw new Error(`${path} is empty`);
@@ -38,12 +47,33 @@ export function readCsv(path: string): RecipientInput[] {
       if (column.toLowerCase() === "badge_id" && /^\d{8}$/.test(val.trim())) {
         val = `${val.trim().slice(0, 4)}-${val.trim().slice(4)}`;
       }
-      if (i !== emailAt && column.toLowerCase() !== "name") metadata[column] = val;
+      if (i !== emailAt && column.toLowerCase() !== "name") {
+        metadata[column] = val;
+        const snakeKey = column.toLowerCase().replace(/\s+/g, "_");
+        if (!(snakeKey in metadata)) {
+          metadata[snakeKey] = val;
+        }
+      }
     });
+
+    const rawFirst = String(metadata["first_name"] ?? "").trim();
+    const rawLast = String(metadata["last_name"] ?? "").trim();
+
+    if (rawFirst && isInitialOnly(rawFirst)) {
+      if (rawLast && !isInitialOnly(rawLast)) {
+        metadata["first_name"] = `${rawFirst} ${rawLast}`.trim();
+      } else {
+        metadata["first_name"] = "";
+      }
+    }
+
     const nameAt = columns.findIndex((c) => c.toLowerCase() === "name");
-    const name = nameAt === -1 ? undefined : cells[nameAt];
+    const explicitName = nameAt === -1 ? undefined : (cells[nameAt] ?? "").trim();
+    const synthesizedName = [rawFirst, rawLast].filter(Boolean).join(" ").trim();
+    const name = explicitName || synthesizedName || undefined;
+
     return {
-      email: cells[emailAt] ?? "",
+      email: (cells[emailAt] ?? "").trim(),
       ...(name ? { name } : {}),
       metadata,
     };
